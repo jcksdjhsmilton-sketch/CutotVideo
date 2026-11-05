@@ -1,0 +1,922 @@
+# Gerado pela skill cutout-video-builder.
+# Como usar: suba este arquivo em  .github/workflows/exemplo-gerar-video.yml  de um repositório GitHub.
+# O vídeo começa a ser gerado sozinho (ou: aba Actions > "Gerar video cutout" > Run workflow).
+# Resultado: aba Actions > execução > "Artifacts" > video-pronto (baixe o .zip e abra o video.mp4).
+name: Gerar video cutout
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/exemplo-gerar-video.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Baixar o repositório (para ler inputs/voz.mp3 e inputs/musica.mp3, se existirem)
+        uses: actions/checkout@v4
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar ffmpeg, fontes e bibliotecas de animação
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y ffmpeg fonts-dejavu-core
+          python -m pip install --upgrade pip
+          python -m pip install pillow numpy edge-tts
+
+      - name: Baixar fonte das legendas (Lilita One)
+        run: |
+          mkdir -p assets/fonts
+          curl -fsSL -o assets/fonts/LilitaOne-Regular.ttf "https://github.com/google/fonts/raw/main/ofl/lilitaone/LilitaOne-Regular.ttf" || echo "Fonte não baixou, usando DejaVu Bold"
+
+      - name: Escrever o plano do vídeo e o renderizador
+        run: |
+          mkdir -p build
+          cat > plan.json <<'CVB_PLAN_EOF'
+          {
+            "meta": {
+              "title": "Demo estilo cutout",
+              "fps": 30,
+              "voice": "pt-BR-AntonioNeural",
+              "rate": "+8%"
+            },
+            "characters": {
+              "main": {
+                "skin": "#d99a62",
+                "shirt": "#2f7de1",
+                "pants": "#233a78",
+                "hair": "#14141e",
+                "hair_style": "spiky"
+              },
+              "amiga": {
+                "skin": "#f0c9a0",
+                "shirt": "#3ab36b",
+                "pants": "#5b4a8a",
+                "hair": "#6b3f23",
+                "hair_style": "bowl"
+              }
+            },
+            "scenes": [
+              {
+                "bg": {
+                  "type": "sunburst",
+                  "colors": [
+                    "#3a1c8f",
+                    "#1d0f4d"
+                  ],
+                  "speed": 0.2
+                },
+                "char": {
+                  "id": "main",
+                  "pose": "point_right",
+                  "expression": "shock",
+                  "x": 0.25,
+                  "y": 0.66,
+                  "scale": 0.95
+                },
+                "props": [
+                  {
+                    "kind": "hud",
+                    "label": "Visualizações",
+                    "count_from": 408786,
+                    "count_to": 1250000,
+                    "x": 0.5,
+                    "y": 0.08
+                  },
+                  {
+                    "kind": "phone",
+                    "text": "Vídeo wow",
+                    "color": "#1f9aa8",
+                    "x": 0.72,
+                    "y": 0.4,
+                    "scale": 0.85
+                  }
+                ],
+                "beats": [
+                  {
+                    "text": "Você já viu"
+                  },
+                  {
+                    "text": "vídeos de *animação*"
+                  },
+                  {
+                    "text": "que prendem"
+                  },
+                  {
+                    "text": "do *começo* ao fim?"
+                  }
+                ]
+              },
+              {
+                "bg": {
+                  "type": "street",
+                  "colors": [
+                    "#8fd0ff",
+                    "#dff3ff"
+                  ]
+                },
+                "char": {
+                  "id": "main",
+                  "pose": "dance",
+                  "expression": "happy",
+                  "x": 0.5,
+                  "y": 0.66
+                },
+                "props": [
+                  {
+                    "kind": "tag",
+                    "text": "Personagem",
+                    "color": "yellow",
+                    "x": 0.5,
+                    "y": 0.2,
+                    "rot": -4
+                  }
+                ],
+                "beats": [
+                  {
+                    "text": "*Personagem* se mexendo,"
+                  },
+                  {
+                    "text": "legenda *dinâmica*,",
+                    "pose": "cheer"
+                  },
+                  {
+                    "text": "cenário mudando"
+                  },
+                  {
+                    "text": "a cada frase",
+                    "pose": "open"
+                  }
+                ]
+              },
+              {
+                "bg": {
+                  "type": "sunburst",
+                  "colors": [
+                    "#ffd54a",
+                    "#ff8a1f"
+                  ]
+                },
+                "char": {
+                  "id": "main",
+                  "pose": "idle",
+                  "expression": "tired",
+                  "x": 0.5,
+                  "y": 0.88,
+                  "scale": 1.7
+                },
+                "beats": [
+                  {
+                    "text": "E sabe o que",
+                    "expr": "shock"
+                  },
+                  {
+                    "text": "eu vou te",
+                    "expr": "shock"
+                  },
+                  {
+                    "text": "*contar*?",
+                    "expr": "think"
+                  }
+                ]
+              },
+              {
+                "bg": {
+                  "type": "grid",
+                  "colors": [
+                    "#0b1230",
+                    "#152250"
+                  ]
+                },
+                "char": {
+                  "id": "main",
+                  "pose": "open",
+                  "expression": "shock",
+                  "x": 0.28,
+                  "y": 0.66,
+                  "scale": 0.9
+                },
+                "props": [
+                  {
+                    "kind": "hud",
+                    "label": "Feito num editor?",
+                    "text": "NÃO",
+                    "x": 0.5,
+                    "y": 0.08
+                  },
+                  {
+                    "kind": "window",
+                    "title": "cena.py",
+                    "lines": [
+                      "def personagem(t):",
+                      "    braco.gira(sin(t))",
+                      "    olhos.pisca()",
+                      "    boca.fala(audio)"
+                    ],
+                    "x": 0.62,
+                    "y": 0.3,
+                    "scale": 0.8
+                  },
+                  {
+                    "kind": "stamp",
+                    "text": "Renderizado",
+                    "color": "green",
+                    "x": 0.7,
+                    "y": 0.52,
+                    "at": 2,
+                    "rot": -6
+                  }
+                ],
+                "beats": [
+                  {
+                    "text": "Ele foi criado"
+                  },
+                  {
+                    "text": "por *código*"
+                  },
+                  {
+                    "text": "de ponta a ponta",
+                    "expr": "happy"
+                  }
+                ]
+              },
+              {
+                "bg": {
+                  "type": "gradient",
+                  "colors": [
+                    "#ffb3d9",
+                    "#9b7cf0"
+                  ]
+                },
+                "confetti": false,
+                "char": {
+                  "id": "main",
+                  "pose": "point_right",
+                  "expression": "happy",
+                  "x": 0.2,
+                  "y": 0.66,
+                  "scale": 0.9
+                },
+                "props": [
+                  {
+                    "kind": "checklist",
+                    "title": "Fluxo",
+                    "items": [
+                      "Referências",
+                      "Tema",
+                      "Roteiro",
+                      "Voz",
+                      "Áudio"
+                    ],
+                    "x": 0.66,
+                    "y": 0.34,
+                    "scale": 0.8,
+                    "follow": true
+                  }
+                ],
+                "beats": [
+                  {
+                    "text": "Você envia suas"
+                  },
+                  {
+                    "text": "*referências*"
+                  },
+                  {
+                    "text": "escolhe o *tema*"
+                  },
+                  {
+                    "text": "recebe o *roteiro*"
+                  },
+                  {
+                    "text": "gera a *voz*"
+                  }
+                ]
+              },
+              {
+                "bg": {
+                  "type": "gradient",
+                  "colors": [
+                    "#1e8f7a",
+                    "#0d5f58"
+                  ]
+                },
+                "confetti": true,
+                "chars": [
+                  {
+                    "id": "main",
+                    "pose": "cheer",
+                    "expression": "happy",
+                    "x": 0.3,
+                    "y": 0.66,
+                    "scale": 0.8
+                  },
+                  {
+                    "id": "amiga",
+                    "pose": "cheer",
+                    "expression": "happy",
+                    "x": 0.7,
+                    "y": 0.66,
+                    "scale": 0.8,
+                    "flip": true
+                  }
+                ],
+                "props": [
+                  {
+                    "kind": "stamp",
+                    "text": "Pronto!",
+                    "color": "green",
+                    "x": 0.5,
+                    "y": 0.2
+                  }
+                ],
+                "beats": [
+                  {
+                    "text": "E entrega"
+                  },
+                  {
+                    "text": "o vídeo *pronto*!"
+                  }
+                ]
+              },
+              {
+                "bg": {
+                  "type": "sunburst",
+                  "colors": [
+                    "#7b3fe4",
+                    "#d6338f"
+                  ]
+                },
+                "confetti": true,
+                "char": {
+                  "id": "main",
+                  "pose": "cheer",
+                  "expression": "happy",
+                  "x": 0.5,
+                  "y": 0.66,
+                  "scale": 0.9
+                },
+                "props": [
+                  {
+                    "kind": "tag",
+                    "text": "Link na bio",
+                    "color": "white",
+                    "x": 0.5,
+                    "y": 0.12
+                  },
+                  {
+                    "kind": "circles",
+                    "items": [
+                      "1|Compre",
+                      "2|Ative",
+                      "3|Crie"
+                    ],
+                    "x": 0.5,
+                    "y": 0.3,
+                    "scale": 0.8,
+                    "follow": true
+                  }
+                ],
+                "beats": [
+                  {
+                    "text": "O link está na bio"
+                  },
+                  {
+                    "text": "*Compre*"
+                  },
+                  {
+                    "text": "*Ative* no Claude"
+                  },
+                  {
+                    "text": "e *crie*",
+                    "say": "e crie o seu primeiro vídeo"
+                  }
+                ]
+              }
+            ]
+          }
+          CVB_PLAN_EOF
+          cat > render_video.py <<'CVB_PY_EOF'
+          #!/usr/bin/env python3
+          """
+          cutout-video-builder :: renderizador
+            python render_video.py prepare   -> gera build/audio.* e build/timing.json (TTS ou áudio do usuário)
+            python render_video.py render    -> lê plan.json + timing e gera o mp4 vertical 9:16
+          Dependências: pillow, numpy, ffmpeg (+ edge-tts / faster-whisper só no `prepare`).
+          """
+          import argparse, asyncio, glob, json, math, os, random, re, subprocess, sys
+          from functools import lru_cache
+          from multiprocessing import Pool
+
+          import numpy as np
+          from PIL import Image, ImageDraw, ImageFont
+
+          W0, H0 = 1080, 1920
+          INK = (22, 22, 36)
+          YEL, RED, GRN, WHT = (255, 214, 10), (255, 59, 48), (52, 199, 89), (255, 255, 255)
+          PALETTE = {"yellow": ((255, 204, 0), INK), "white": ((255, 255, 255), INK), "green": ((52, 199, 89), WHT),
+                     "red": ((255, 59, 48), WHT), "blue": ((46, 125, 225), WHT), "dark": ((20, 26, 56), WHT)}
+
+          # ----------------------------------------------------------------------------- utils
+          def hx(c):
+              if isinstance(c, (tuple, list)): return tuple(c)
+              c = c.lstrip("#"); return tuple(int(c[i:i + 2], 16) for i in (0, 2, 4))
+          def lerp(a, b, t): return a + (b - a) * t
+          def clamp(x, a=0.0, b=1.0): return max(a, min(b, x))
+          def ease_out(t): t = clamp(t); return 1 - (1 - t) ** 3
+          def back(t, c1=2.2):
+              t = clamp(t); return 1 + (c1 + 1) * (t - 1) ** 3 + c1 * (t - 1) ** 2
+          def rad(a): return math.radians(a)
+
+          FONTS = [os.environ.get("CVB_FONT", ""), "assets/fonts/LilitaOne-Regular.ttf", "fonts/LilitaOne-Regular.ttf",
+                   "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"]
+          MONOS = ["/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"]
+          @lru_cache(None)
+          def font(px, mono=False):
+              px = max(6, int(px))
+              for p in (MONOS if mono else FONTS):
+                  if p and os.path.exists(p): return ImageFont.truetype(p, px)
+              return ImageFont.load_default()
+
+          def parse_markup(text):
+              """*amarelo*  ~vermelho~  ^verde^  -> [(palavra, cor)]"""
+              text = re.sub(r"([*~^])([!?.,;:]+)", r"\2\1", text)      # pontuação fica colada na palavra
+              cols = {"*": YEL, "~": RED, "^": GRN}; cur, buf, out = WHT, "", []
+              def flush():
+                  nonlocal buf
+                  out.extend((w, cur) for w in buf.split()); buf = ""
+              for ch in text:
+                  if ch in cols:
+                      flush(); cur = WHT if cur == cols[ch] else cols[ch]
+                  else: buf += ch
+              flush(); return out
+          def strip_markup(t): return re.sub(r"[*~^]", "", t)
+          def caption_clean(w): return re.sub(r"[,.;:]", "", w).upper()
+
+          # ----------------------------------------------------------------------------- camada supersampleada
+          class Layer:
+              def __init__(s, w, h, k, ss=2):
+                  s.k, s.ss, s.m = k, ss, k * ss; s.w, s.h = w, h
+                  s.im = Image.new("RGBA", (max(2, int(w * s.m)), max(2, int(h * s.m))), (0, 0, 0, 0)); s.d = ImageDraw.Draw(s.im)
+              def p(s, x, y): return (x * s.m, y * s.m)
+              def pts(s, a): return [(x * s.m, y * s.m) for x, y in a]
+              def poly(s, a, fill, ow=8, oc=INK):
+                  a = s.pts(a); s.d.polygon(a, fill=fill)
+                  if ow: s.d.line(a + [a[0]], fill=oc, width=int(ow * s.m), joint="curve")
+              def ell(s, cx, cy, rx, ry, fill, ow=8, oc=INK):
+                  s.d.ellipse([(cx - rx) * s.m, (cy - ry) * s.m, (cx + rx) * s.m, (cy + ry) * s.m], fill=fill, outline=oc if ow else None, width=int(ow * s.m) if ow else 0)
+              def rr(s, x0, y0, x1, y1, r, fill, ow=8, oc=INK):
+                  s.d.rounded_rectangle([x0 * s.m, y0 * s.m, x1 * s.m, y1 * s.m], radius=r * s.m, fill=fill, outline=oc if ow else None, width=int(ow * s.m) if ow else 0)
+              def cap(s, p1, p2, r, fill, ow=8, oc=INK):
+                  for rr_, col in ((r + ow, oc), (r, fill)):
+                      if rr_ <= 0: continue
+                      s.d.line([s.p(*p1), s.p(*p2)], fill=col, width=int(2 * rr_ * s.m))
+                      for q in (p1, p2): s.ell(q[0], q[1], rr_, rr_, col, 0)
+              def line(s, a, w, col, joint="curve"): s.d.line(s.pts(a), fill=col, width=int(w * s.m), joint=joint)
+              def text(s, x, y, t, size, fill=WHT, stroke=0, anchor="mm", mono=False, sc=INK):
+                  s.d.text((x * s.m, y * s.m), t, font=font(size * s.m, mono), fill=fill, anchor=anchor,
+                           stroke_width=int(stroke * s.m), stroke_fill=sc)
+              def tw(s, t, size, mono=False):
+                  b = font(size * s.m, mono).getbbox(t); return (b[2] - b[0]) / s.m
+              def done(s):
+                  if s.ss == 1: return s.im
+                  return s.im.resize((max(1, int(s.w * s.k)), max(1, int(s.h * s.k))), Image.LANCZOS)
+
+          # ----------------------------------------------------------------------------- personagem
+          def pose_angles(name, t):
+              w = math.sin(t * 8)
+              P = {"idle": ((12, 8), (12, 8)), "point_right": ((12, 8), (88, 92)), "point_left": ((88, 92), (12, 8)),
+                   "open": ((62, 80), (62, 80)), "cheer": ((150, 168), (150, 168)), "thumb": ((14, 8), (70, 172)),
+                   "shrug": ((38, 100), (38, 100)), "wave": ((12, 8), (140, 150 + 22 * w)),
+                   "think": ((12, 8), (40, 205)), "hips": ((45, -35), (45, -35)),
+                   "dance": ((120 + 50 * math.sin(t * 7), 150 + 30 * math.sin(t * 7)), (120 - 50 * math.sin(t * 7), 150 - 30 * math.sin(t * 7)))}
+              return P.get(name, P["idle"])
+
+          def draw_char(cd, st, k):
+              ss = 2 if k <= 1.3 else 1.25
+              L = Layer(800, 1000, k, ss); ox, oy = 400, 960
+              skin, shirt, pants = hx(cd["skin"]), hx(cd["shirt"]), hx(cd["pants"])
+              hair, shoe = hx(cd["hair"]), hx(cd.get("shoes", "#ffffff"))
+              bob, sway = st["bob"], st["sway"]
+              for side in (-1, 1):                                                    # pernas
+                  lift = st["lift"][0 if side < 0 else 1]
+                  hip = (ox + side * 48 + sway * .5, oy - 255 + bob); ank = (ox + side * 58 + sway * .2, oy - 34 - lift)
+                  L.cap(hip, ank, 40, pants); L.ell(ank[0] + side * 12, ank[1] + 14, 64, 30, shoe)
+              L.rr(ox - 100 + sway, oy - 505 + bob, ox + 100 + sway, oy - 232 + bob, 62, shirt)   # tronco
+              L.rr(ox - 84 + sway, oy - 262 + bob, ox + 84 + sway, oy - 232 + bob, 14, pants, 6)    # cintura
+              for side in (-1, 1):                                                    # braços
+                  sh = (ox + side * 98 + sway, oy - 470 + bob); a1, a2 = st["arms"][0 if side < 0 else 1]
+                  el = (sh[0] + side * math.sin(rad(a1)) * 125, sh[1] + math.cos(rad(a1)) * 125)
+                  wr = (el[0] + side * math.sin(rad(a2)) * 115, el[1] + math.cos(rad(a2)) * 115)
+                  L.cap(sh, el, 32, shirt); L.cap(el, wr, 29, shirt); L.ell(wr[0], wr[1], 36, 36, skin)
+              hx0, hy0 = ox + sway + st["hx"], oy - 655 + bob + st["hy"]
+              L.rr(hx0 - 38, hy0 + 100, hx0 + 38, hy0 + 190, 20, skin)                # pescoço
+              L.ell(hx0 - 148, hy0 + 10, 30, 38, skin); L.ell(hx0 + 148, hy0 + 10, 30, 38, skin)   # orelhas
+              L.ell(hx0, hy0, 150, 160, skin)                                         # cabeça
+              rnd = random.Random(7)                                                  # cabelo
+              top = []
+              for i in range(11):
+                  a = rad(188 + 164 * i / 10); r = 1.0 if i % 2 else 1.0 + (0.34 if cd.get("hair_style", "spiky") == "spiky" else 0.1) * (0.75 + 0.5 * rnd.random())
+                  top.append((hx0 + 150 * r * math.cos(a), hy0 + 160 * r * math.sin(a) * (1 if i % 2 else 1.02)))
+              top += [(hx0 + 140, hy0 - 40), (hx0 + 70, hy0 - 98), (hx0 + 5, hy0 - 80), (hx0 - 62, hy0 - 104), (hx0 - 140, hy0 - 40)]
+              L.poly(top, hair, 8)
+              ex = st["expr"]; lk = st.get("look", (0, 0)); op = st["blink"]                # rosto
+              for side in (-1, 1):
+                  cx, cy = hx0 + side * 58, hy0 + 14
+                  if ex == "happy" or (ex == "wink" and side == 1) or op < 0.18:
+                      L.d.arc([(cx - 34) * L.m, (cy - 20) * L.m, (cx + 34) * L.m, (cy + 24) * L.m], 200, 340, fill=INK, width=int(9 * L.m))
+                  else:
+                      big = 1.25 if ex == "shock" else 1.0; hgt = 44 * big * (0.5 if ex == "tired" else 1) * op
+                      L.ell(cx, cy, 34 * big, hgt, WHT, 6)
+                      pr = (13 if ex == "shock" else 17); L.ell(cx + lk[0] * 8 + side * -2, cy + lk[1] * 8, pr, pr * 1.15, INK, 0)
+                      if ex == "tired": L.d.rectangle([(cx - 40) * L.m, (cy - hgt - 6) * L.m, (cx + 40) * L.m, (cy - hgt * .1) * L.m], fill=skin)
+                  br = {"shock": 24, "happy": 10, "tired": -6, "think": 14 if side == 1 else 0}.get(ex, 4)
+                  L.line([(cx - 30, cy - 62 - br + (side * -4)), (cx + 30, cy - 66 - br + (side * 4 if ex != "tired" else 0))], 9, INK)
+              L.ell(hx0 - 88, hy0 + 55, 24, 16, (236, 128, 112), 0); L.ell(hx0 + 88, hy0 + 55, 24, 16, (236, 128, 112), 0)   # blush
+              L.poly([(hx0 - 8, hy0 + 40), (hx0 + 10, hy0 + 40), (hx0 + 2, hy0 + 52)], tuple(int(c * .75) for c in skin), 0)  # nariz
+              mx, my, m = hx0, hy0 + 98, st["mouth"]
+              if ex in ("happy",):
+                  h = 28 + 46 * m
+                  L.d.pieslice([(mx - 66) * L.m, (my - h * .9) * L.m, (mx + 66) * L.m, (my + h) * L.m], 0, 180, fill=(70, 20, 35), outline=INK, width=int(7 * L.m))
+                  L.d.rectangle([(mx - 56) * L.m, (my - 4) * L.m, (mx + 56) * L.m, (my + 14) * L.m], fill=WHT)
+              elif ex == "shock":
+                  L.ell(mx, my + 6, 38, 36 + 38 * m, (70, 20, 35), 7); L.ell(mx, my + 28 + 18 * m, 24, 14 + 8 * m, (236, 110, 130), 0)
+              elif ex in ("tired", "think"):
+                  L.line([(mx - 34, my + 6), (mx, my + (14 if ex == "think" else 2)), (mx + 34, my + 4)], 8, INK)
+              else:
+                  h = 10 + 62 * m; L.ell(mx, my + h * .3, 33, h, (70, 20, 35), 7)
+                  if m > .35: L.ell(mx, my + h * .75, 20, h * .32, (236, 110, 130), 0)
+              return L.done()
+
+          def char_state(cd, pose, prev_pose, t_change, expr, t, talking, mouth_phase, idx):
+              cur, prv = pose_angles(pose, t), pose_angles(prev_pose or pose, t)
+              e = ease_out((t - t_change) / 0.2) if prev_pose else 1.0
+              wob = 5 * math.sin(t * 3 + idx)
+              arms = tuple((lerp(prv[j][0], cur[j][0], e) + wob * (j * 2 - 1), lerp(prv[j][1], cur[j][1], e) + wob) for j in (0, 1))
+              dancing = pose == "dance"; ph = t * 7
+              bob = math.sin(t * 2 * math.pi * 1.4 + idx) * 7 + (math.sin(t * 2 * math.pi * 5) * 3 if talking else 0)
+              if dancing: bob = -abs(math.sin(ph)) * 28
+              lift = (max(0, math.sin(ph)) * 44, max(0, -math.sin(ph)) * 44) if dancing else (0, 0)
+              sway = math.sin(ph / 2) * 26 if dancing else math.sin(t * 1.3 + idx) * 5
+              tt = (t + idx * 1.3) % 3.2; blink = abs(math.cos(math.pi * tt / 0.16)) if tt < 0.16 else 1.0
+              mouth = (0.45 + 0.55 * abs(math.sin(t * 17 + mouth_phase))) * (0.6 + 0.4 * math.sin(t * 5.3)) if talking else 0.08
+              look = (0, -1) if expr == "think" else (math.sin(t * .9), 0)
+              return dict(arms=arms, bob=bob, sway=sway, lift=lift, blink=blink, mouth=clamp(mouth), expr=expr, look=look,
+                          hx=math.sin(t * 1.7 + idx) * 5 + (math.sin(t * 12) * 4 if talking else 0), hy=math.sin(t * 6) * 2 if talking else 0)
+
+          # ----------------------------------------------------------------------------- fundos
+          _BASE, _GRID = {}, {}
+          BG_DEFAULT = {"sunburst": ["#ffd54a", "#ff8a1f"], "street": ["#8fd0ff", "#dff3ff"], "room": ["#f6e7c1", "#b98a56"],
+                        "grid": ["#0b1230", "#152250"], "gradient": ["#ffb3d9", "#9b7cf0"]}
+          def ang_grid(w, h, cx, cy):
+              key = (w, h, cx, cy)
+              if key not in _GRID:
+                  yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
+                  _GRID[key] = (np.arctan2(yy - cy, xx - cx), np.hypot(yy - cy, xx - cx) / math.hypot(w, h))
+              return _GRID[key]
+
+          def vgrad(w, h, c1, c2):
+              t = np.linspace(0, 1, h, dtype=np.float32)[:, None, None]
+              arr = np.array(c1, np.float32) * (1 - t) + np.array(c2, np.float32) * t
+              return Image.fromarray(np.repeat(arr, w, axis=1).astype(np.uint8), "RGB")
+
+          def sparkles(img, t, seed, n, s, col=(255, 255, 255)):
+              d = ImageDraw.Draw(img); r = random.Random(seed)
+              for _ in range(n):
+                  x, y, ph, sz = r.random() * W0, r.random() * H0 * .8, r.random() * 6, 10 + r.random() * 20
+                  a = (math.sin(t * 3 + ph) + 1) / 2; z = sz * (.3 + .7 * a) * s; x, y = x * s, y * s
+                  d.polygon([(x, y - z), (x + z * .25, y - z * .25), (x + z, y), (x + z * .25, y + z * .25), (x, y + z), (x - z * .25, y + z * .25), (x - z, y), (x - z * .25, y - z * .25)], fill=col)
+
+          def draw_street(sc, s, cols):
+              w, h = int(W0 * s), int(H0 * s); im = vgrad(w, h, hx(cols[0]), hx(cols[1])); d = ImageDraw.Draw(im); r = random.Random(3)
+              ground = int(.655 * h); x = -20 * s; pastel = [(236, 140, 140), (244, 190, 110), (174, 150, 226), (150, 200, 240), (243, 222, 140), (130, 210, 170)]
+              while x < w:
+                  bw, bh = r.randint(190, 300) * s, r.randint(300, 520) * s; c = r.choice(pastel); top = ground - bh
+                  d.rectangle([x, top, x + bw, ground], fill=c, outline=INK, width=max(1, int(4 * s)))
+                  d.polygon([(x - 8 * s, top), (x + bw / 2, top - 70 * s), (x + bw + 8 * s, top)], fill=tuple(int(v * .78) for v in c), outline=INK)
+                  for wy in range(int(top + 40 * s), int(ground - 70 * s), int(110 * s)):
+                      for wx in range(int(x + 30 * s), int(x + bw - 60 * s), int(90 * s)):
+                          d.rectangle([wx, wy, wx + 50 * s, wy + 66 * s], fill=(160, 210, 250), outline=INK, width=max(1, int(3 * s)))
+                  x += bw + r.randint(0, 14) * s
+              d.rectangle([0, ground, w, h], fill=(70, 72, 84)); d.rectangle([0, ground, w, ground + 24 * s], fill=(190, 190, 200))
+              return im
+          def draw_room(sc, s, cols):
+              w, h = int(W0 * s), int(H0 * s); im = Image.new("RGB", (w, h), hx(cols[0])); d = ImageDraw.Draw(im); fl = int(.62 * h)
+              d.rectangle([0, fl, w, h], fill=hx(cols[1])); d.rectangle([0, fl - 14 * s, w, fl], fill=tuple(int(v * .8) for v in hx(cols[1])))
+              d.rectangle([60 * s, 260 * s, 380 * s, 640 * s], fill=(150, 205, 250), outline=INK, width=int(8 * s))
+              d.line([(220 * s, 260 * s), (220 * s, 640 * s)], fill=INK, width=int(8 * s)); d.line([(60 * s, 450 * s), (380 * s, 450 * s)], fill=INK, width=int(8 * s))
+              d.rectangle([700 * s, 260 * s, 980 * s, 560 * s], fill=WHT, outline=INK, width=int(8 * s))
+              d.polygon([(720 * s, 540 * s), (820 * s, 400 * s), (880 * s, 480 * s), (930 * s, 420 * s), (960 * s, 540 * s)], fill=(90, 170, 120))
+              d.ellipse([870 * s, 290 * s, 930 * s, 350 * s], fill=(255, 190, 40)); return im
+          def draw_grid(sc, s, cols):
+              w, h = int(W0 * s), int(H0 * s); im = vgrad(w, h, hx(cols[0]), hx(cols[1])); d = ImageDraw.Draw(im); gc = tuple(int(v * 1.5) + 12 for v in hx(cols[0]))
+              for x in range(0, w, int(60 * s)): d.line([(x, 0), (x, h)], fill=gc, width=1)
+              for y in range(0, h, int(60 * s)): d.line([(0, y), (w, y)], fill=gc, width=1)
+              return im
+
+          def make_bg(sc, idx, s, t):
+              bg = sc.get("bg", {}); typ = bg.get("type", "sunburst"); cols = bg.get("colors") or BG_DEFAULT.get(typ, BG_DEFAULT["sunburst"]); w, h = int(W0 * s), int(H0 * s)
+              if typ == "sunburst":
+                  ang, dist = ang_grid(w, h, w // 2, int(h * .45))
+                  rays = bg.get("rays", 14); ph = (ang + t * bg.get("speed", .35)) / (2 * math.pi / rays)
+                  m = (np.floor(ph) % 2 == 0)[..., None]; c1, c2 = np.array(hx(cols[0]), np.float32), np.array(hx(cols[1]), np.float32)
+                  arr = (np.where(m, c1, c2) * (1.08 - .38 * dist[..., None])).clip(0, 255).astype(np.uint8)
+                  im = Image.fromarray(arr, "RGB")
+              else:
+                  key = (idx, s)
+                  if key not in _BASE:
+                      _BASE[key] = {"street": draw_street, "room": draw_room, "grid": draw_grid}.get(typ, lambda sc_, s_, c_: vgrad(int(W0 * s_), int(H0 * s_), hx(c_[0]), hx(c_[-1])))(sc, s, cols)
+                  im = _BASE[key].copy()
+                  if typ == "street":                                                  # faixas da rua andando
+                      d = ImageDraw.Draw(im); off = (t * 260 * s) % (230 * s); y0 = int(.78 * h)
+                      for x in np.arange(-230 * s + off, w, 230 * s): d.rectangle([x, y0, x + 130 * s, y0 + 16 * s], fill=(235, 235, 240))
+              if bg.get("sparkles", typ in ("grid", "gradient")): sparkles(im, t, idx, 18, s)
+              if sc.get("confetti"):
+                  d = ImageDraw.Draw(im); r = random.Random(idx + 99); pal = [(255, 214, 10), (255, 59, 48), (52, 199, 89), (90, 170, 255), (255, 255, 255), (255, 105, 180)]
+                  for _ in range(70):
+                      x, y0, v, sp, c = r.random() * w, r.random() * h, (160 + r.random() * 260) * s, (r.random() - .5) * 14, r.choice(pal)
+                      y = (y0 + v * t) % h; a = t * sp; z = 10 * s
+                      d.polygon([(x + z * math.cos(a + q) * (1 if q % 3 else .4), y + z * math.sin(a + q) * .6) for q in (0, 1.6, 3.14, 4.7)], fill=c)
+              return im
+
+          # ----------------------------------------------------------------------------- props (camadas em unidades de design)
+          def tokens_code(line):
+              out = []
+              for m in re.finditer(r'"[^"]*"|\b(?:def|return|class|import|for|in|if)\b|\w+(?=\()|\s+|.', line):
+                  t = m.group(0)
+                  c = (255, 121, 198) if t in ("def", "return", "class", "import", "for", "in", "if") else (241, 250, 140) if t.startswith('"') else (139, 233, 253) if re.fullmatch(r"\w+", t) and line[m.end():m.end() + 1] == "(" else (220, 230, 255)
+                  out.append((t, c))
+              return out
+
+          def P_tag(p, s, c):
+              t = p.get("text", "").upper(); fc, tc = PALETTE.get(p.get("color", "yellow"), PALETTE["yellow"]); sz = p.get("size", 56)
+              tmp = Layer(10, 10, s, 2); w = tmp.tw(t, sz) + 80; L = Layer(w + 20, sz * 1.5 + 30, s); L.rr(10, 10, w + 10, sz * 1.5 + 20, 22, fc, 9)
+              L.text((w + 20) / 2, (sz * 1.5 + 30) / 2 + 2, t, sz, tc); return L.done()
+          def P_hud(p, s, c):
+              val = p.get("text", "")
+              if "count_to" in p:
+                  v = int(lerp(p.get("count_from", 0), p["count_to"], clamp(c["t"] / max(c["dur"], .1)))); val = f"{v:,}".replace(",", ".")
+              L = Layer(600, 140, s); L.rr(10, 10, 590, 130, 30, (14, 20, 50), 5, (84, 112, 190))
+              L.text(300, 42, p.get("label", "").upper(), 26, (150, 172, 214)); L.text(300, 88, val, 54, YEL if p.get("hl", True) else WHT); return L.done()
+          def P_starburst(p, s, c):
+              L = Layer(700, 700, s); pts = []
+              for i in range(32): a = i * math.pi / 16; r = 330 if i % 2 == 0 else 262; pts.append((350 + r * math.cos(a), 350 + r * math.sin(a)))
+              L.poly(pts, hx(p.get("fill", "#ff3b30")), 10); L.text(350, 330, p.get("text", ""), p.get("size", 140), WHT, 9)
+              if p.get("sub"): L.text(350, 450, p["sub"], 76, YEL, 7)
+              return L.done()
+          def P_checklist(p, s, c):
+              items = p.get("items", []); n = len(items); cur = clamp(c["nb"], 0, n) if p.get("follow", True) else p.get("checked", 0); H = 150 + n * 92
+              L = Layer(600, H + 30, s); L.rr(20, 60, 580, H + 20, 34, WHT, 8); L.rr(190, 20, 410, 90, 16, (50, 56, 96), 6); L.text(300, 56, p.get("title", "").upper(), 34, WHT)
+              for i, it in enumerate(items):
+                  y = 135 + i * 92
+                  if i == cur: L.rr(36, y - 40, 564, y + 40, 12, (255, 236, 179), 0)
+                  L.rr(64, y - 26, 116, y + 26, 8, WHT, 6, (70, 76, 110))
+                  if i < cur or (i == cur and p.get("tick_current", True) and c["nb"] >= 0 and False): L.line([(72, y), (90, y + 18), (112, y - 18)], 11, GRN)
+                  L.text(340, y, it.upper(), 38, INK)
+              return L.done()
+          def P_circles(p, s, c):
+              items = p.get("items", []); vis = len(items) if not p.get("follow", True) else clamp(c["nb"] + 1, 0, len(items)); vis = int(vis); cols = [YEL, GRN, (255, 90, 130), (90, 170, 255)]
+              L = Layer(240 * max(len(items), 1) + 20, 260, s)
+              for i, it in enumerate(items[:vis]):
+                  a, b = (it.split("|") + [""])[:2]; cx = 130 + i * 240; L.ell(cx, 130, 108, 108, cols[i % 4], 9); L.text(cx, 100, a, 66, INK); L.text(cx, 168, b.upper(), 30, INK)
+              return L.done()
+          def P_cross(p, s, c):
+              L = Layer(600, 600, s); L.ell(300, 300, 250, 250, None, 0); L.d.ellipse([50 * L.m, 50 * L.m, 550 * L.m, 550 * L.m], outline=RED, width=int(34 * L.m))
+              L.line([(130, 130), (470, 470)], 34, RED); L.line([(470, 130), (130, 470)], 34, RED); return L.done()
+          def P_phone(p, s, c):
+              L = Layer(400, 720, s); L.rr(20, 20, 380, 700, 62, (24, 24, 40), 8); L.rr(44, 48, 356, 672, 40, hx(p.get("color", "#1f9aa8")), 0)
+              L.text(200, 600, p.get("text", "").upper(), 36, WHT, 0); return L.done()
+          def P_bulb(p, s, c):
+              L = Layer(560, 640, s)
+              for i in range(12):
+                  a = i * math.pi / 6; L.line([(280 + 190 * math.cos(a), 250 + 190 * math.sin(a)), (280 + 250 * math.cos(a), 250 + 250 * math.sin(a))], 14, (255, 236, 120))
+              L.ell(280, 250, 150, 150, YEL, 9); L.rr(220, 380, 340, 470, 18, (200, 205, 215), 8); L.rr(236, 470, 324, 520, 18, (150, 156, 170), 8); return L.done()
+          def P_window(p, s, c):
+              L = Layer(800, 620, s); L.rr(10, 10, 790, 610, 26, (16, 22, 50), 6, (84, 112, 190)); L.d.rectangle([16 * L.m, 16 * L.m, 784 * L.m, 70 * L.m], fill=(30, 40, 80))
+              for i, col in enumerate(((255, 95, 86), (255, 189, 46), (39, 201, 63))): L.ell(46 + i * 36, 43, 11, 11, col, 0)
+              L.text(400, 43, p.get("title", "").upper(), 24, (180, 196, 230)); lines = p.get("lines", []); chars = int(c["t"] * 26)
+              for i, ln in enumerate(lines):
+                  if chars <= 0: break
+                  part = ln[:chars]; chars -= len(ln) + 4; x = 40
+                  for tk, col in tokens_code(part): L.text(x, 120 + i * 62, tk, 38, col, 0, "lm", True); x += L.tw("M" * len(tk), 38, True) if tk.strip() else 23
+              if p.get("bars"):
+                  r = random.Random(5)
+                  for row in range(5):
+                      x = 40
+                      while x < 700: wd = r.randint(80, 220); L.rr(x, 110 + row * 80, x + wd, 150 + row * 80, 8, r.choice([(255, 105, 130), (90, 200, 255), (255, 200, 70), (90, 230, 140)]), 0); x += wd + 14
+              return L.done()
+          def P_coin(p, s, c):
+              L = Layer(200, 200, s); w = abs(math.cos(c["t"] * 5)) * 80 + 14; L.ell(100, 100, w, 80, (255, 204, 0), 7); L.text(100, 100, "$", 70 * (w / 94), (190, 130, 0)); return L.done()
+          def P_clock(p, s, c):
+              L = Layer(500, 500, s); L.ell(250, 250, 220, 220, WHT, 10)
+              for i in range(12): a = i * math.pi / 6; L.line([(250 + 190 * math.sin(a), 250 - 190 * math.cos(a)), (250 + 210 * math.sin(a), 250 - 210 * math.cos(a))], 8, INK)
+              a = c["t"] * 4; L.line([(250, 250), (250 + 150 * math.sin(a), 250 - 150 * math.cos(a))], 12, INK); L.line([(250, 250), (250 + 100 * math.sin(a / 12), 250 - 100 * math.cos(a / 12))], 16, INK)
+              L.line([(250, 250), (250 + 170 * math.sin(a * 3), 250 - 170 * math.cos(a * 3))], 8, RED); return L.done()
+          def P_arrow(p, s, c):
+              L = Layer(200, 220, s); up = p.get("dir", "up") == "up"; pts = [(100, 10), (190, 110), (130, 110), (130, 210), (70, 210), (70, 110), (10, 110)]
+              L.poly(pts if up else [(x, 220 - y) for x, y in pts], YEL, 9); return L.done()
+          def P_toggle(p, s, c):
+              L = Layer(440, 220, s); L.rr(10, 20, 430, 200, 90, GRN, 9); L.ell(330, 110, 66, 66, WHT, 7); L.text(130, 110, p.get("text", "ON"), 72, WHT, 6); return L.done()
+          PROPS = {k[2:].lower(): v for k, v in dict(globals()).items() if k.startswith("P_") and callable(v)}
+          PROPS["stamp"] = P_tag
+
+          _PCACHE = {}
+          def prop_key(p, c):
+              k = p.get("kind")
+              if k == "hud": return (c["t"] // .1 if "count_to" in p else 0)
+              if k in ("checklist", "circles"): return c["nb"]
+              if k == "window": return int(c["t"] * 26)
+              if k in ("coin", "clock"): return int(c["t"] * 30)
+              return 0
+
+          # ----------------------------------------------------------------------------- legenda
+          def caption_layer(text, s):
+              toks = [(caption_clean(w), c) for w, c in parse_markup(text)]; size = 108
+              while True:
+                  f = font(size * s); sp = .3 * size * s; ws = [f.getbbox(w)[2] - f.getbbox(w)[0] for w, _ in toks]; tot = sum(ws) + sp * (len(toks) - 1)
+                  if tot < .9 * W0 * s or size < 50: break
+                  size -= 4
+              im = Image.new("RGBA", (int(W0 * s), int(230 * s)), (0, 0, 0, 0)); d = ImageDraw.Draw(im); x = (im.width - tot) / 2
+              for (w, c), wd in zip(toks, ws):
+                  d.text((x, im.height / 2), w, font=f, fill=c, anchor="lm", stroke_width=max(2, int(size * .12 * s)), stroke_fill=(0, 0, 0)); x += wd + sp
+              return im
+
+          # ----------------------------------------------------------------------------- linha do tempo
+          def build_timeline(plan, timing):
+              beats, sc_of, first = [], [], []
+              for si, sc in enumerate(plan["scenes"]):
+                  first.append(len(beats))
+                  for b in sc["beats"]:
+                      b = dict(b); b.setdefault("say", strip_markup(b["text"])); beats.append(b); sc_of.append(si)
+              n = [max(1, len(b["say"].split())) for b in beats]; tot = sum(n); dur = timing.get("duration", 0) or tot * .42 + 1.5; words = timing.get("words")
+              starts, cum = [], 0
+              if words:
+                  kk = len(words) / tot
+                  for ni in n: starts.append(words[min(len(words) - 1, int(round(cum * kk)))][0]); cum += ni
+                  end = words[-1][1]
+              else:
+                  ch = [len(b["say"]) + 1 for b in beats]; span = max(dur - .55, 1); cum = 0
+                  for c_ in ch: starts.append(.25 + span * cum / sum(ch)); cum += c_
+                  end = .25 + span
+              for i, b in enumerate(beats):
+                  if "start" in b: starts[i] = float(b["start"])
+              starts[0] = 0.0
+              for i in range(1, len(starts)): starts[i] = max(starts[i], starts[i - 1] + .15)
+              for i, b in enumerate(beats): b["_s"] = starts[i]; b["_e"] = starts[i + 1] if i + 1 < len(beats) else end + .5
+              total = max(dur + .3, beats[-1]["_e"]); beats[-1]["_e"] = total
+              return beats, sc_of, first, total
+
+          # ----------------------------------------------------------------------------- frame
+          G = {}
+          def init(plan, timing, s):
+              G.update(plan=plan, s=s, fps=plan.get("meta", {}).get("fps", 30)); G["beats"], G["sc_of"], G["first"], G["total"] = build_timeline(plan, timing)
+              G["chars"] = plan.get("characters", {"main": dict(skin="#d99a62", shirt="#2f7de1", pants="#233a78", hair="#14141e")})
+
+          def render_frame(i):
+              s, plan, beats = G["s"], G["plan"], G["beats"]; t = i / G["fps"]
+              g = max(j for j, b in enumerate(beats) if b["_s"] <= t); si = G["sc_of"][g]; sc = plan["scenes"][si]; f0 = G["first"][si]; lb = g - f0
+              t0 = beats[f0]["_s"] if si else 0.0; nxt = G["first"][si + 1] if si + 1 < len(G["first"]) else None
+              t1 = beats[nxt]["_s"] if nxt else G["total"]; ts = t - t0
+              img = make_bg(sc, si, s, t).convert("RGBA"); w, h = img.size
+              for pi, p in enumerate(sc.get("props", [])):                                  # props
+                  at = p.get("at", 0); un = p.get("until")
+                  if lb < at or (un is not None and lb >= un): continue
+                  tp = t - beats[f0 + at]["_s"]; c = dict(t=tp, nb=lb - at, dur=t1 - t0); key = (si, pi, prop_key(p, c))
+                  if key not in _PCACHE:
+                      if len(_PCACHE) > 400: _PCACHE.clear()
+                      _PCACHE[key] = PROPS[p["kind"]](p, s, c)
+                  lay = _PCACHE[key]; pop = back(tp / .28) if tp < .28 else 1.0; pul = 1 + .025 * math.sin(tp * 5 + pi)
+                  z = p.get("scale", 1) * pop * pul
+                  if z < .02: continue
+                  lay = lay.resize((max(1, int(lay.width * z)), max(1, int(lay.height * z))), Image.BILINEAR)
+                  rot = p.get("rot", 0) * 1 + (math.sin(tp * 4 + pi) * 1.5 if p.get("kind") in ("tag", "stamp") else 0)
+                  if rot: lay = lay.rotate(rot, expand=True, resample=Image.BICUBIC)
+                  fy = 0 if p.get("kind") == "hud" else math.sin(tp * 3 + pi) * 9 * s
+                  img.alpha_composite(lay, (int(p.get("x", .5) * w - lay.width / 2), int(p.get("y", .3) * h - lay.height / 2 + fy)))
+              cl = sc.get("chars") or ([sc["char"]] if sc.get("char") else [])                # personagens
+              b = beats[g]
+              for ci, ch in enumerate(cl):
+                  cd = G["chars"].get(ch.get("id", "main"), list(G["chars"].values())[0])
+                  pose = (b.get("pose") if ci == 0 else None) or ch.get("pose", "idle"); expr = (b.get("expr") if ci == 0 else None) or ch.get("expression", "neutral")
+                  prev = None; tch = b["_s"]
+                  if lb > 0 and ci == 0:
+                      pb = beats[g - 1]; prev = pb.get("pose") or ch.get("pose", "idle")
+                      if prev == pose: prev = None
+                  talking = b["_s"] <= t < b["_e"] - .05
+                  st = char_state(cd, pose, prev, tch, expr, t, talking, ci * 1.7, ci)
+                  zc = ch.get("scale", 1.0); ent = ch.get("enter", "pop"); te = ts
+                  zz = back(te / .35) if ent == "pop" and te < .35 else 1.0
+                  if zz < .03: continue
+                  lay = draw_char(cd, st, s * zc * zz)
+                  cx = ch.get("x", .5) * w + (-(1 - ease_out(te / .35)) * 500 * s * (1 if ch.get("x", .5) < .5 else -1) if ent == "slide" and te < .35 else 0)
+                  cy = ch.get("y", .66) * h; px = int(cx - lay.width * 400 / 800) ; py = int(cy - lay.height * 960 / 1000)
+                  if ch.get("flip"): lay = lay.transpose(Image.FLIP_LEFT_RIGHT)
+                  img.alpha_composite(lay, (px, py))
+              if b["text"]:                                                                  # legenda
+                  ck = ("cap", g)
+                  if ck not in _PCACHE: _PCACHE[ck] = caption_layer(b["text"], s)
+                  cap = _PCACHE[ck]; tb = t - b["_s"]; z = .65 + .35 * back(tb / .16) if tb < .16 else 1.0
+                  rot = (-1 if g % 2 else 1) * 2.5 * (1 - clamp(tb / .3))
+                  cap = cap.resize((max(1, int(cap.width * z)), max(1, int(cap.height * z))), Image.BILINEAR)
+                  if rot: cap = cap.rotate(rot, expand=True, resample=Image.BICUBIC)
+                  img.alpha_composite(cap, (int(w / 2 - cap.width / 2), int(.745 * h - cap.height / 2)))
+              if si and ts < .14:                                                            # flash na troca de cena
+                  fl = Image.new("RGBA", img.size, (255, 255, 255, int(150 * (1 - ts / .14)))); img.alpha_composite(fl)
+              return img.convert("RGB").tobytes()
+
+          # ----------------------------------------------------------------------------- audio / timing
+          def ffprobe_dur(p):
+              r = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", p], capture_output=True, text=True)
+              try: return float(r.stdout.strip())
+              except ValueError: return 0.0
+
+          async def tts_edge(text, voice, rate, out):
+              import edge_tts
+              try: com = edge_tts.Communicate(text, voice, rate=rate, boundary="WordBoundary")
+              except TypeError: com = edge_tts.Communicate(text, voice, rate=rate)
+              words = []
+              with open(out, "wb") as f:
+                  async for ch in com.stream():
+                      if ch["type"] == "audio": f.write(ch["data"])
+                      elif ch["type"] == "WordBoundary": st = ch["offset"] / 1e7; words.append((st, st + ch["duration"] / 1e7))
+              return words
+
+          def whisper_words(path):
+              from faster_whisper import WhisperModel
+              m = WhisperModel("small", device="cpu", compute_type="int8"); segs, _ = m.transcribe(path, language="pt", word_timestamps=True)
+              return [(w.start, w.end) for sg in segs for w in sg.words]
+
+          def cmd_prepare(a):
+              plan = json.load(open(a.plan, encoding="utf-8")); meta = plan.get("meta", {}); os.makedirs("build", exist_ok=True)
+              say = " ".join(strip_markup(b.get("say", b["text"])) for sc in plan["scenes"] for b in sc["beats"])
+              user = [p for p in sorted(glob.glob("inputs/voz.*")) if os.path.isfile(p)]; timing = {}
+              if user:
+                  out = "build/audio" + os.path.splitext(user[0])[1]; subprocess.run(["cp", user[0], out], check=True); words = None
+                  if meta.get("timing", "whisper") == "whisper":
+                      try: words = whisper_words(out)
+                      except Exception as e: print("whisper indisponível, usando tempo proporcional:", e)
+                  timing = dict(audio=out, duration=ffprobe_dur(out), words=words, source="user")
+              elif meta.get("voice", "pt-BR-AntonioNeural") != "none":
+                  out = "build/audio.mp3"; words = asyncio.run(tts_edge(say, meta.get("voice", "pt-BR-AntonioNeural"), meta.get("rate", "+8%"), out))
+                  timing = dict(audio=out, duration=ffprobe_dur(out), words=words or None, source="edge-tts")
+              json.dump(timing, open("build/timing.json", "w")); print("timing:", {k: (v if k != "words" else (len(v) if v else None)) for k, v in timing.items()})
+
+          def cmd_render(a):
+              plan = json.load(open(a.plan, encoding="utf-8")); timing = json.load(open("build/timing.json")) if os.path.exists("build/timing.json") else {}
+              if a.audio: timing = dict(timing, audio=a.audio, duration=ffprobe_dur(a.audio))
+              s = a.scale; init(plan, timing, s); fps = G["fps"]; n = int(math.ceil(G["total"] * fps)); w, h = int(W0 * s), int(H0 * s)
+              if a.frame is not None:
+                  Image.frombytes("RGB", (w, h), render_frame(int(a.frame * fps))).save(a.out); print("frame salvo em", a.out); return
+              cmd = ["ffmpeg", "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{w}x{h}", "-r", str(fps), "-i", "-"]
+              au = timing.get("audio"); mus = (glob.glob("inputs/musica.*") or [None])[0]
+              if au: cmd += ["-i", au]
+              if au and mus:
+                  cmd += ["-stream_loop", "-1", "-i", mus, "-filter_complex", f"[2:a]volume={plan.get('meta', {}).get('music_volume', .12)}[m];[1:a][m]amix=inputs=2:duration=first:dropout_transition=0[a]", "-map", "0:v", "-map", "[a]"]
+              elif au: cmd += ["-map", "0:v", "-map", "1:a"]
+              cmd += ["-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p", "-t", f"{G['total']:.3f}"]
+              if au: cmd += ["-c:a", "aac", "-b:a", "192k", "-af", "apad"] if not mus else ["-c:a", "aac", "-b:a", "192k"]
+              cmd += ["-movflags", "+faststart", a.out]
+              pr = subprocess.Popen(cmd, stdin=subprocess.PIPE); workers = a.workers or os.cpu_count() or 2
+              print(f"{n} frames @ {fps}fps ({G['total']:.1f}s) {w}x{h} | {workers} processos")
+              with Pool(workers, initializer=init, initargs=(plan, timing, s)) as pool:
+                  for k, fr in enumerate(pool.imap(render_frame, range(n), chunksize=8)):
+                      pr.stdin.write(fr)
+                      if k % 150 == 0: print(f"  {k}/{n}", flush=True)
+              pr.stdin.close(); pr.wait(); print("ok ->", a.out, "| código ffmpeg:", pr.returncode); sys.exit(pr.returncode)
+
+          if __name__ == "__main__":
+              ap = argparse.ArgumentParser(); ap.add_argument("cmd", choices=["prepare", "render"]); ap.add_argument("--plan", default="plan.json")
+              ap.add_argument("--out", default="video.mp4"); ap.add_argument("--audio"); ap.add_argument("--scale", type=float, default=1.0)
+              ap.add_argument("--workers", type=int, default=0); ap.add_argument("--frame", type=float, help="renderiza só 1 frame (segundos) em PNG")
+              a = ap.parse_args(); {"prepare": cmd_prepare, "render": cmd_render}[a.cmd](a)
+          CVB_PY_EOF
+
+      - name: Instalar reconhecimento de fala (só se você enviou inputs/voz.*)
+        run: |
+          if ls inputs/voz.* >/dev/null 2>&1; then python -m pip install faster-whisper; else echo "Sem inputs/voz.*, vou gerar a voz com edge-tts"; fi
+
+      - name: Gerar voz e marcar o tempo de cada frase
+        run: python render_video.py prepare --plan plan.json
+
+      - name: Renderizar o vídeo (1080x1920, 30 fps)
+        run: python render_video.py render --plan plan.json --out video.mp4
+
+      - name: Gerar capa (PNG)
+        run: python render_video.py render --plan plan.json --frame 1.5 --out capa.png
+
+      - name: Salvar resultado
+        uses: actions/upload-artifact@v4
+        with:
+          name: video-pronto
+          path: |
+            video.mp4
+            capa.png
+          retention-days: 14
